@@ -1,25 +1,41 @@
 import 'dart:io';
 
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:roadanomalies_root/models/anomaly_image_data.dart';
+import 'package:roadanomalies_root/models/anomaly_video_data.dart';
 
-class AnomalyData {
-  final File imageFile;
+abstract class AnomalyData{
+  final File mediaFile;
   final DateTime capturedAt;
-  final LatLng position;
 
-  AnomalyData(this.imageFile, this.capturedAt, this.position);
+  AnomalyData(this.mediaFile, this.capturedAt);
 
   AnomalyData.fromJson(Map<String, dynamic> json)
-      : imageFile = File(json["imagePath"]! as String),
+      : mediaFile = File(json["mediaPath"]! as String),
         capturedAt =
-            DateTime.fromMillisecondsSinceEpoch(int.parse(json["capturedAt"]! as String)),
-        position =
-            LatLng(double.parse(json["lati"]!), double.parse(json["long"]! as String));
+        DateTime.fromMillisecondsSinceEpoch(int.parse(json["capturedAt"]! as String));
 
   Map<String, String> toJson() => {
-        "imagePath": imageFile.path,
-        "capturedAt": capturedAt.millisecondsSinceEpoch.toString(),
-        "lati": position.latitude.toString(),
-        "long": position.longitude.toString()
-      };
+    "mediaPath": mediaFile.path,
+    "capturedAt": capturedAt.millisecondsSinceEpoch.toString(),
+    "type": getType().name,
+  };
+
+  DataType getType();
+
+  static AnomalyData? getAnomalyFromJson(Map<String,dynamic> json){
+    String type = (json["type"]! as String);
+    switch(type){
+      case "image":{
+        return AnomalyImageData.fromJson(json);
+      }
+      case "video":{
+        return AnomalyVideoData.fromJson(json);
+      }
+    }
+    return null;
+  }
+}
+
+enum DataType{
+  image,video
 }

@@ -2,12 +2,12 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:roadanomalies_root/components/full_screen_view_image.dart';
-import 'package:roadanomalies_root/models/anomaly_data.dart';
+import 'package:roadanomalies_root/models/anomaly_image_data.dart';
 import 'package:roadanomalies_root/util/network_util.dart';
 import 'package:roadanomalies_root/util/storage_util.dart';
 
 class UploadImageCard extends StatefulWidget {
-  final AnomalyData anomalyData;
+  final AnomalyImageData anomalyData;
   final Function deleteCurrentElement;
   final bool showActionButton;
   const UploadImageCard(
@@ -42,7 +42,7 @@ class _UploadImageCardState extends State<UploadImageCard> {
             : "Failed to upload :("),
       ));
 
-      deleteCurrentImage();
+      if(success) deleteCurrentImage();
     } catch (e) {
       if (kDebugMode) print(e);
     }
@@ -62,7 +62,7 @@ class _UploadImageCardState extends State<UploadImageCard> {
             Expanded(
                 flex: 1,
                 child:
-                    FullScreenViewImage(image: widget.anomalyData.imageFile)),
+                    FullScreenViewImage(image: widget.anomalyData.mediaFile )),
             const SizedBox(
               width: 8,
             ),
@@ -101,10 +101,10 @@ class _UploadImageCardState extends State<UploadImageCard> {
                               Expanded(
                                   child: ElevatedButton(
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.purple,
+                                  backgroundColor: Theme.of(context).colorScheme.secondary,
                                 ),
                                 onPressed: deleteCurrentImage,
-                                child: const Text("Delete"),
+                                child: const Text("Delete",style: TextStyle(color: Colors.white38),),
                               ))
                             ],
                           )

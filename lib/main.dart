@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
+import 'package:roadanomalies_root/colors.dart';
 import 'package:roadanomalies_root/pages/anomalies_map.dart';
 import 'package:roadanomalies_root/pages/capture_image.dart';
 import 'package:roadanomalies_root/constants.dart';
@@ -117,10 +118,11 @@ class _MyAppState extends State<MyApp> {
 
     return MaterialApp(
       title: 'Road Anomalies',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        scaffoldBackgroundColor: const Color(0xFFFCEAE6),
-      ),
+      theme: buildShrineTheme(),
+      // ThemeData(
+      //   primarySwatch: Colors.,
+      //   scaffoldBackgroundColor: const Color(0xFFFCEAE6),
+      // ),
       home:  const MyHomePage(title: 'Road Anomalies'),
       // initialRoute: '/',
       routes: {

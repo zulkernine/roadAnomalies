@@ -4,7 +4,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:roadanomalies_root/components/my_drawer.dart';
 import 'package:roadanomalies_root/components/upload_image_card.dart';
+import 'package:roadanomalies_root/components/upload_video_data.dart';
 import 'package:roadanomalies_root/models/anomaly_data.dart';
+import 'package:roadanomalies_root/models/anomaly_image_data.dart';
+import 'package:roadanomalies_root/models/anomaly_video_data.dart';
 import 'package:roadanomalies_root/util/network_util.dart';
 import 'package:roadanomalies_root/util/storage_util.dart';
 
@@ -16,7 +19,8 @@ class Drafts extends StatefulWidget {
 }
 
 class _DraftsState extends State<Drafts> {
-  List<AnomalyData> localAnomalies = [];
+  List<AnomalyImageData> localImageAnomalies = [];
+  List<AnomalyVideoData> localVideoAnomalies = [];
   bool isUploadingAll = false;
   double progress = 0;
   final CancelToken cancelToken = CancelToken();
@@ -30,12 +34,18 @@ class _DraftsState extends State<Drafts> {
   Future<void> updateLocalQueue() async {
     var anomalies = await LocalStorageUtil.getAllAnomalies();
     setState(() {
-      localAnomalies = anomalies;
+      for (var data in anomalies) {
+        if (data.getType() == DataType.image) {
+          localImageAnomalies.add(data as AnomalyImageData);
+        }else{
+          localVideoAnomalies.add(data as AnomalyVideoData);
+        }
+      }
     });
   }
 
   void batchUploadHandler() async {
-    if (localAnomalies.isEmpty) {
+    if (localImageAnomalies.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
         content:
             Text("No pothole-images stored at local storage! Please take some"
@@ -49,7 +59,7 @@ class _DraftsState extends State<Drafts> {
       isUploadingAll = true;
     });
     try {
-      bool success = await NetworkUtil.uploadBatch(localAnomalies,
+      bool success = await NetworkUtil.uploadBatch(localImageAnomalies,
           token: cancelToken, onSendProgressCallback: (int sent, int total) {
         setState(() {
           progress = sent / total;
@@ -129,8 +139,8 @@ class _DraftsState extends State<Drafts> {
               const SizedBox(
                 height: 16,
               ),
-              if (localAnomalies.isNotEmpty)
-                ...localAnomalies
+              if (localImageAnomalies.isNotEmpty)
+                ...localImageAnomalies
                     .map((e) => UploadImageCard(
                           anomalyData: e,
                           showActionButton: !isUploadingAll,
@@ -138,10 +148,26 @@ class _DraftsState extends State<Drafts> {
                             LocalStorageUtil.deleteAnomaly(
                                 e.capturedAt.millisecondsSinceEpoch.toString());
                             setState(() {
-                              localAnomalies.remove(e);
+                              localImageAnomalies.remove(e);
                             });
                           },
                         ))
+                    .toList(),
+              const SizedBox(height: 12,),
+              Text("Your videos",style: Theme.of(context).textTheme.headline5,),
+              const SizedBox(height: 12,),
+              if (localVideoAnomalies.isNotEmpty)
+                ...localVideoAnomalies
+                    .map((e) => UploadVideoCard(
+                  anomalyData: e,
+                  deleteCurrentElement: () {
+                    LocalStorageUtil.deleteAnomaly(
+                        e.capturedAt.millisecondsSinceEpoch.toString());
+                    setState(() {
+                      localVideoAnomalies.remove(e);
+                    });
+                  },
+                ))
                     .toList(),
             ],
           ),

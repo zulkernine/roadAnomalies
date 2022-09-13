@@ -1,13 +1,16 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
 import 'package:roadanomalies_root/components/my_drawer.dart';
 import 'package:roadanomalies_root/components/upload_image_card.dart';
+import 'package:roadanomalies_root/components/upload_video_data.dart';
+import 'package:roadanomalies_root/models/anomaly_video_data.dart';
 import 'package:roadanomalies_root/util/common_utils.dart';
 import 'package:roadanomalies_root/util/storage_util.dart';
 
-import '../models/anomaly_data.dart';
+import '../models/anomaly_image_data.dart';
 
 class CaptureImage extends StatefulWidget {
   const CaptureImage({Key? key, required this.camera}) : super(key: key);
@@ -20,38 +23,49 @@ class CaptureImage extends StatefulWidget {
 class _CaptureImageState extends State<CaptureImage> {
   late CameraController _controller;
   late Future<void> _initializeControllerFuture;
-  List<AnomalyData> localAnomalies = [];
+  AnomalyImageData? lastImageAnomaly;
+  AnomalyVideoData? lastVideoAnomaly;
+  bool isRecording = false;
+  DateTime captureStartedAt = DateTime.now();
+  Map<String, LatLng> locationRecorded = {};
 
   @override
   void initState() {
     super.initState();
-    // To display the current output from the Camera, create a CameraController.
     _controller = CameraController(widget.camera, ResolutionPreset.medium);
-    updateLocalQueue();
-    // Next, initialize the controller. This returns a Future.
     _initializeControllerFuture = _controller.initialize();
+
+    // capture continuous location change, when user is recording
+    Location().onLocationChanged.listen((LocationData curLoc) {
+      if (isRecording) {
+        locationRecorded[(curLoc.time ?? DateTime.now().millisecondsSinceEpoch)
+            .toInt()
+            .toString()] = LatLng(curLoc.latitude!, curLoc.longitude!);
+      }
+    });
   }
 
   @override
   void dispose() {
-    // Dispose of the controller when the widget is disposed.
     _controller.dispose();
     super.dispose();
   }
 
-  Future<void> updateLocalQueue() async {
-    var anomalies = await LocalStorageUtil.getAllAnomalies();
-    setState(() {
-      localAnomalies = anomalies;
-    });
-  }
+  // Future<void> updateLocalQueue() async {
+  //   var anomalies = await LocalStorageUtil.getAllAnomalies();
+  //   setState(() {
+  //     localAnomalies = anomalies;
+  //   });
+  // }
 
   void handleCapture() async {
     try {
       final image = await _controller.takePicture();
       var loc = await Location().getLocation();
-      await CommonUtils.addImageToQueue(image, loc);
-      await updateLocalQueue();
+      var data = await CommonUtils.addImageToQueue(image, loc);
+      setState(() {
+        lastImageAnomaly = data;
+      });
     } catch (error) {
       if (kDebugMode) {
         print(error);
@@ -59,7 +73,31 @@ class _CaptureImageState extends State<CaptureImage> {
     }
   }
 
-  void handleStreaming() async {}
+  void handleRecording() async {
+    if (isRecording) {
+      final file = await _controller.stopVideoRecording();
+      setState(() => isRecording = false);
+
+      //TODO save video
+      AnomalyVideoData data = await CommonUtils.addVideoToQueue(
+          file, captureStartedAt, {...locationRecorded});
+      print(data.toJson());
+      setState(() {
+        lastVideoAnomaly = data;
+
+        /// clear the record, it should only contain while recording, once record stopped, all the
+        /// data will be moved to create AnomalyVideoData
+        locationRecorded.clear();
+      });
+    } else {
+      await _controller.prepareForVideoRecording();
+      await _controller.startVideoRecording();
+      setState(() {
+        captureStartedAt = DateTime.now();
+        isRecording = true;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -76,6 +114,7 @@ class _CaptureImageState extends State<CaptureImage> {
               if (snapshot.connectionState == ConnectionState.done) {
                 // If the Future is complete, display the preview.
                 return Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Container(
                         clipBehavior: Clip.hardEdge,
@@ -104,11 +143,13 @@ class _CaptureImageState extends State<CaptureImage> {
                           ),
                           Expanded(
                             child: ElevatedButton(
-                                onPressed: handleStreaming,
+                                onPressed: handleRecording,
                                 style: ElevatedButton.styleFrom(
                                     padding: const EdgeInsets.symmetric(
                                         vertical: 20)),
-                                child: const Text("Stream Image")),
+                                child: Text(!isRecording
+                                    ? "Start Recording"
+                                    : "Stop Recording")),
                           ),
                         ],
                       ),
@@ -116,30 +157,45 @@ class _CaptureImageState extends State<CaptureImage> {
                     const SizedBox(
                       height: 16,
                     ),
-                    if (localAnomalies.isNotEmpty)
-                      ...localAnomalies
-                          .map((e) => Padding(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 16.0),
-                                child: UploadImageCard(
-                                  anomalyData: e,
-                                  deleteCurrentElement: () {
-                                    LocalStorageUtil.deleteAnomaly(e
-                                        .capturedAt.millisecondsSinceEpoch
-                                        .toString());
-                                    setState(() {
-                                      localAnomalies.remove(e);
-                                    });
-                                  },
-                                ),
-                              ))
-                          .toList(),
+                    if (lastImageAnomaly != null)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        child: UploadImageCard(
+                          anomalyData: lastImageAnomaly!,
+                          deleteCurrentElement: () {
+                            LocalStorageUtil.deleteAnomaly(lastImageAnomaly!
+                                .capturedAt.millisecondsSinceEpoch
+                                .toString());
+                            setState(() {
+                              lastImageAnomaly = null;
+                            });
+                          },
+                        ),
+                      ),
+                    if (lastVideoAnomaly != null)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        child: UploadVideoCard(
+                          anomalyData: lastVideoAnomaly!,
+                          deleteCurrentElement: () {
+                            LocalStorageUtil.deleteAnomaly(lastVideoAnomaly!
+                                .capturedAt.millisecondsSinceEpoch
+                                .toString());
+                            setState(() {
+                              lastVideoAnomaly = null;
+                            });
+                          },
+                        ),
+                      ),
                     const SizedBox(
                       height: 16,
                     ),
-                    const Text(
-                        "Only the latest image is shown here, please look into"
-                        " draft/history page to see all your captures."), // Display all anomalies from local queue
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Text(
+                          "Only the latest image is shown here, please look into"
+                          " draft/history page to see all your captures."),
+                    ), // Display all anomalies from local queue
                     const SizedBox(
                       height: 20,
                     ), // Display all anomalies from local queue
