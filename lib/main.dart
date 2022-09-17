@@ -4,9 +4,12 @@ import 'package:roadanomalies_root/colors.dart';
 import 'package:roadanomalies_root/pages/anomalies_map.dart';
 import 'package:roadanomalies_root/pages/capture_image.dart';
 import 'package:roadanomalies_root/constants.dart';
+import 'package:roadanomalies_root/pages/capture_image_v2.dart';
+import 'package:roadanomalies_root/pages/draft_v2.dart';
 import 'package:roadanomalies_root/pages/drafts.dart';
 import 'package:roadanomalies_root/pages/home.dart';
 import 'package:location/location.dart';
+import 'package:roadanomalies_root/pages/home_v2.dart';
 import 'package:roadanomalies_root/util/storage_util.dart';
 
 void main() async {
@@ -116,20 +119,30 @@ class _MyAppState extends State<MyApp> {
       );
     }
 
+    //v2
     return MaterialApp(
       title: 'Road Anomalies',
       theme: buildShrineTheme(),
-      // ThemeData(
-      //   primarySwatch: Colors.,
-      //   scaffoldBackgroundColor: const Color(0xFFFCEAE6),
-      // ),
-      home:  const MyHomePage(title: 'Road Anomalies'),
-      // initialRoute: '/',
+      home:  const HomePageV2(),
+      showSemanticsDebugger: false,
       routes: {
-        // '/': (context) => const MyHomePage(title: 'Road Anomalies'),
-        RouteName.capture: (context) => CaptureImage(
+        RouteName.capture: (context) => CaptureImageV2(
               camera: widget.camera,
             ),
+        RouteName.map: (context) => const AnomaliesMap(),
+        RouteName.draft: (context) => const DraftsV2(),
+      },
+    );
+
+    //v1
+    return MaterialApp(
+      title: 'Road Anomalies',
+      theme: buildShrineTheme(),
+      home:  const MyHomePage(title: 'Road Anomalies'),
+      routes: {
+        RouteName.capture: (context) => CaptureImage(
+          camera: widget.camera,
+        ),
         RouteName.map: (context) => const AnomaliesMap(),
         RouteName.draft: (context) => const Drafts(),
       },

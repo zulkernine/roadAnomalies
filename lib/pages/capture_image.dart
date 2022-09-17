@@ -80,7 +80,7 @@ class _CaptureImageState extends State<CaptureImage> {
 
       //TODO save video
       AnomalyVideoData data = await CommonUtils.addVideoToQueue(
-          file, captureStartedAt, {...locationRecorded});
+          file, captureStartedAt, {...locationRecorded},0);
       print(data.toJson());
       setState(() {
         lastVideoAnomaly = data;

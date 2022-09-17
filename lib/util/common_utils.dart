@@ -15,9 +15,9 @@ class CommonUtils{
     return anomaly;
   }
 
-  static Future<AnomalyVideoData> addVideoToQueue(XFile video,DateTime captureStartAt,Map<String,LatLng> locations)async{
+  static Future<AnomalyVideoData> addVideoToQueue(XFile video,DateTime captureStartAt,Map<String,LatLng> locations,double traveledDistance)async{
     File vid = await LocalStorageUtil.copyToDocumentDirectory(video);
-    AnomalyVideoData anomaly = AnomalyVideoData(vid,captureStartAt,locations);
+    AnomalyVideoData anomaly = AnomalyVideoData(vid,captureStartAt,locations,traveledDistance);
     await LocalStorageUtil.addAnomaly(anomaly);
     return anomaly;
   }

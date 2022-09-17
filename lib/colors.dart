@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 
+const scaffoldBackgroundColor = Color(0xFF1E1E1E);
+const white1 = Color(0xFFD9D9D9);
+const grey1 = Color(0xFF949FA6);
+const red1 = Color(0xFFAA0707);
+
 const kShrinePink50 = Color(0xFFFEEAE6);
 const kShrinePink100 = Color(0xFFFEDBD0);
 const kShrinePink300 = Color(0xFFFBB8AC);
