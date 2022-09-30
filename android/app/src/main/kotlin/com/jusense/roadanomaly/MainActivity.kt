@@ -1,4 +1,4 @@
-package edu.jusense.roadanomalies.roadanomalies_root
+package com.jusense.roadanomaly
 
 import io.flutter.embedding.android.FlutterActivity
 

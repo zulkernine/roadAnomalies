@@ -19,11 +19,17 @@ dependencies:
   location: ^4.3.0
   photo_view: ^0.14.0
   dio: ^4.0.6
+  http: ^0.13.5
   video_player: ^2.4.7
   chewie:
   latlong2: ^0.8.1
   intl: ^0.17.0
   lottie: ^1.4.3
+  disk_space: ^0.2.1
+  platform_device_id: ^1.0.1
+  firebase_core: ^1.22.0
+  firebase_auth: ^3.9.0
+  video_compress: ^3.1.0
 
 dev_dependencies:
   flutter_test:

@@ -5,7 +5,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:intl/intl.dart';
 import 'package:location/location.dart';
 import 'package:lottie/lottie.dart';
 import 'package:roadanomalies_root/models/anomaly_video_data.dart';
@@ -36,7 +35,7 @@ class _CaptureImageV2State extends State<CaptureImageV2> {
   @override
   void initState() {
     super.initState();
-    _controller = CameraController(widget.camera, ResolutionPreset.medium);
+    _controller = CameraController(widget.camera, ResolutionPreset.max);
     _initializeControllerFuture = _controller.initialize();
 
     // capture continuous location change, when user is recording
@@ -271,7 +270,7 @@ class _RecordedTimeState extends State<RecordedTime> {
           borderRadius: const BorderRadius.all(Radius.circular(12))),
       child: Row(
         children: [
-          Lottie.asset(
+          if(widget.isRecording) Lottie.asset(
             'assets/recording_animation.json',
             width: 16,
             height: 16,

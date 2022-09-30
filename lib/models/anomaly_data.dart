@@ -4,7 +4,7 @@ import 'package:roadanomalies_root/models/anomaly_image_data.dart';
 import 'package:roadanomalies_root/models/anomaly_video_data.dart';
 
 abstract class AnomalyData{
-  final File mediaFile;
+  File mediaFile;
   final DateTime capturedAt;
 
   AnomalyData(this.mediaFile, this.capturedAt);

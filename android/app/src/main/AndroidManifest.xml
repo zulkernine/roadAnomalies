@@ -1,5 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="edu.jusense.roadanomalies.roadanomalies_root">
+    package="com.jusense.roadanomaly">
+<!--    package="edu.jusense.roadanomalies.roadanomalies_root">-->
+    <uses-permission android:name="android.permission.INTERNET" />
    <application
         android:label="roadanomalies_root"
         android:name="${applicationName}"

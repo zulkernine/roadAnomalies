@@ -2,14 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:roadanomalies_root/colors.dart';
 import 'package:roadanomalies_root/pages/anomalies_map.dart';
-import 'package:roadanomalies_root/pages/capture_image.dart';
 import 'package:roadanomalies_root/constants.dart';
 import 'package:roadanomalies_root/pages/capture_image_v2.dart';
 import 'package:roadanomalies_root/pages/draft_v2.dart';
-import 'package:roadanomalies_root/pages/drafts.dart';
-import 'package:roadanomalies_root/pages/home.dart';
 import 'package:location/location.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:roadanomalies_root/pages/home_v2.dart';
+import 'package:roadanomalies_root/pages/signin.dart';
+// import 'firebase_options.dart';
+import 'package:roadanomalies_root/pages/signup.dart';
+import 'package:roadanomalies_root/util/auth_util.dart';
 import 'package:roadanomalies_root/util/storage_util.dart';
 
 void main() async {
@@ -18,6 +20,8 @@ void main() async {
   await LocalStorageUtil.initialCheck();
   final cameras = await availableCameras();
   final firstCamera = cameras.first;
+
+  await Firebase.initializeApp();
 
   runApp(MyApp(
     camera: firstCamera,
@@ -39,8 +43,8 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-
     checkLocationPermission();
+    // _checkUser();
   }
 
   Future<void> checkLocationPermission() async {
@@ -119,11 +123,13 @@ class _MyAppState extends State<MyApp> {
       );
     }
 
+    bool b = AuthUtil.isLoggedIn();
     //v2
     return MaterialApp(
       title: 'Road Anomalies',
       theme: buildShrineTheme(),
-      home:  const HomePageV2(),
+      home: b ? const HomePageV2() : const SignUpPage(),
+      // initialRoute: b ? RouteName.home : RouteName.signup,
       showSemanticsDebugger: false,
       routes: {
         RouteName.capture: (context) => CaptureImageV2(
@@ -131,21 +137,13 @@ class _MyAppState extends State<MyApp> {
             ),
         RouteName.map: (context) => const AnomaliesMap(),
         RouteName.draft: (context) => const DraftsV2(),
+        RouteName.signup: (context) => const SignUpPage(),
+        RouteName.signin: (context) => const SignInPage(),
+        RouteName.home: (context) => const HomePageV2(),
       },
     );
 
-    //v1
-    return MaterialApp(
-      title: 'Road Anomalies',
-      theme: buildShrineTheme(),
-      home:  const MyHomePage(title: 'Road Anomalies'),
-      routes: {
-        RouteName.capture: (context) => CaptureImage(
-          camera: widget.camera,
-        ),
-        RouteName.map: (context) => const AnomaliesMap(),
-        RouteName.draft: (context) => const Drafts(),
-      },
-    );
   }
 }
+
+

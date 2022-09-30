@@ -1,24 +1,38 @@
 import 'dart:convert';
-
+import 'package:http/http.dart' as http;
 import 'package:dio/dio.dart';
+import 'package:http_parser/http_parser.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:path/path.dart';
+import 'package:platform_device_id/platform_device_id.dart';
 import 'package:roadanomalies_root/models/anomaly_image_data.dart';
 import 'package:roadanomalies_root/models/anomaly_video_data.dart';
+import 'package:roadanomalies_root/util/auth_util.dart';
 import 'package:roadanomalies_root/util/storage_util.dart';
 import 'package:video_player/video_player.dart';
 
 class HttpClient {
+
+  static const baseUrl = "http://107.23.192.116";
+
+  static http.MultipartRequest getGETRequest(String path) =>
+      http.MultipartRequest("GET", Uri.parse(baseUrl+path));
+
+  static http.MultipartRequest getPOSTRequest(String path) =>
+      http.MultipartRequest("POST", Uri.parse(baseUrl+path));
+
   final Dio dio;
 
   /// Singleton pattern - always return same instance!
   static final HttpClient _singleton = HttpClient._internal();
+
   factory HttpClient() {
     return _singleton;
   }
+
   HttpClient._internal()
-      : dio = Dio(BaseOptions(baseUrl: "http://44.204.57.99:3000"));
+      : dio = Dio(BaseOptions(baseUrl: "http://107.23.192.116"));
 }
 
 class NetworkUtil {
@@ -142,5 +156,60 @@ class NetworkUtil {
       if (kDebugMode) print(e);
     }
     return false;
+  }
+
+  static Future<bool> uploadVideoHttp(AnomalyVideoData anomaly,
+      {Function(int, int)? onSendProgressCallback}) async {
+    try {
+      Map<String, dynamic> metadata = {};
+      metadata["positions"] = {};
+      metadata["capturedAt"] = anomaly.capturedAt.millisecondsSinceEpoch;
+      metadata["deviceId"] = await PlatformDeviceId.getDeviceId;
+      metadata["userId"] = AuthUtil.getCurrentUser()?.uid;
+      for (var p in anomaly.positions.entries) {
+        metadata["positions"][p.key] = {
+          "latitude": p.value.latitude,
+          "longitude": p.value.longitude
+        };
+      }
+      var controller = VideoPlayerController.file(anomaly.mediaFile);
+      await controller.initialize();
+      metadata["duration"] = controller.value.duration.inMilliseconds;
+
+      var request = HttpClient.getPOSTRequest("/video/single")
+        ..fields['metadata'] = jsonEncode(metadata)
+        ..files.add(await http.MultipartFile.fromPath(
+            "video", anomaly.mediaFile.path,
+            contentType: MediaType('video', 'mp4')));
+
+      print("making request");
+      var response = await http.Response.fromStream(await request.send());
+      print(response.statusCode);
+      print(response.body);
+      print(response.headers);
+      if(response.statusCode >= 200 && response.statusCode <300) {
+        return true;
+      } else {
+        return false;
+      }
+    } catch (e) {
+      if (kDebugMode) print(e);
+    }
+    return false;
+  }
+
+  static Future<String> reverseGeoCode(LatLng location,
+      {bool short = false}) async {
+    try {
+      var response = await client.dio.get("/geocode", queryParameters: {
+        "lat": location.latitude,
+        "lng": location.longitude,
+        if (short) "short": 1
+      });
+      return (response.data as Map<String, dynamic>)["address"] as String;
+    } catch (e) {
+      print(e);
+      return "";
+    }
   }
 }

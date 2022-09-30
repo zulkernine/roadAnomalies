@@ -4,8 +4,9 @@ import 'package:roadanomalies_root/styles.dart';
 
 class MyAppBarV2 extends StatelessWidget {
   final String title;
+  final String subTitle;
 
-  const MyAppBarV2(this.title, {Key? key}) : super(key: key);
+  const MyAppBarV2(this.title,this.subTitle, {Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -19,8 +20,8 @@ class MyAppBarV2 extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text("JUSense",style: txtStl20w300,),
-              Text(title,style: txtStl50w800,)
+              Text(subTitle,style: txtStl20w300,),
+              Text(title,style: txtStl40w800,)
             ],
           )),
           Expanded(

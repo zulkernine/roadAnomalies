@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:roadanomalies_root/components/upload_video_card_v2.dart';
 import 'package:roadanomalies_root/models/anomaly_data.dart';
 import 'package:roadanomalies_root/models/anomaly_video_data.dart';
+import 'package:roadanomalies_root/styles.dart';
 import 'package:roadanomalies_root/util/storage_util.dart';
 
 class RecordedVideoList extends StatefulWidget {
@@ -38,19 +39,22 @@ class _RecordedVideoListState extends State<RecordedVideoList> {
         children: [
           if (localVideoAnomalies.isNotEmpty)
             ...localVideoAnomalies
-                .map((e) => UploadVideoCardV2(
-                      anomalyData: e,
-                      deleteCurrentElement: () {
-                        LocalStorageUtil.deleteAnomaly(
-                            e.capturedAt.millisecondsSinceEpoch.toString());
-                        setState(() {
-                          localVideoAnomalies.remove(e);
-                        });
-                      },
-                    ))
+                .map((e) => Padding(
+                  padding: const EdgeInsets.only(bottom: 16.0),
+                  child: UploadVideoCardV2(
+                        anomalyData: e,
+                        deleteCurrentElement: () {
+                          LocalStorageUtil.deleteAnomaly(
+                              e.capturedAt.millisecondsSinceEpoch.toString());
+                          setState(() {
+                            localVideoAnomalies.remove(e);
+                          });
+                        },
+                      ),
+                ))
                 .toList()
           else
-            const Text("You've not recorded any video yet.")
+            Text("You've not recorded any video yet.",style: txtStl14w400,)
         ],
       ),
     );
