@@ -149,3 +149,4 @@ amplifytools.xcconfig
 .secret-*
 **.sample
 #amplify-do-not-edit-end
+/android/app/google-services.json
