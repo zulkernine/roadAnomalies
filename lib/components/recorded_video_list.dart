@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:roadanomalies_root/components/upload_image_card.dart';
 import 'package:roadanomalies_root/components/upload_video_card_v2.dart';
 import 'package:roadanomalies_root/models/anomaly_data.dart';
+import 'package:roadanomalies_root/models/anomaly_image_data.dart';
 import 'package:roadanomalies_root/models/anomaly_video_data.dart';
 import 'package:roadanomalies_root/styles.dart';
 import 'package:roadanomalies_root/util/storage_util.dart';
@@ -14,6 +16,7 @@ class RecordedVideoList extends StatefulWidget {
 
 class _RecordedVideoListState extends State<RecordedVideoList> {
   List<AnomalyVideoData> localVideoAnomalies = [];
+  List<AnomalyImageData> localImageAnomalies = [];
 
   @override
   void initState() {
@@ -27,9 +30,22 @@ class _RecordedVideoListState extends State<RecordedVideoList> {
       for (var data in anomalies) {
         if (data.getType() == DataType.video) {
           localVideoAnomalies.add(data as AnomalyVideoData);
+        }else{
+          localImageAnomalies.add(data as AnomalyImageData);
         }
       }
     });
+  }
+
+  String onEmptyMessage(){
+    if(localImageAnomalies.isEmpty && localVideoAnomalies.isEmpty) {
+      return "You've no recorded or captured any media saved.";
+    } else if(localVideoAnomalies.isEmpty) {
+      return "You've no saved video.";
+    } else if(localImageAnomalies.isEmpty) {
+      return "You've no saved images.";
+    }
+    return "";
   }
 
   @override
@@ -52,9 +68,26 @@ class _RecordedVideoListState extends State<RecordedVideoList> {
                         },
                       ),
                 ))
-                .toList()
-          else
-            Text("You've not recorded any video yet.",style: txtStl14w400,)
+                .toList(),
+          if (localImageAnomalies.isNotEmpty)
+            ...localImageAnomalies
+                .map((e) => Padding(
+                  padding: const EdgeInsets.only(bottom: 16.0),
+                  child: UploadImageCard(
+                        anomalyData: e,
+                        deleteCurrentElement: () {
+                          LocalStorageUtil.deleteAnomaly(
+                              e.capturedAt.millisecondsSinceEpoch.toString());
+                          setState(() {
+                            localImageAnomalies.remove(e);
+                          });
+                        },
+                      ),
+                ))
+                .toList(),
+            const SizedBox(height: 32,),
+            Text(onEmptyMessage(),style: txtStl14w400,),
+
         ],
       ),
     );

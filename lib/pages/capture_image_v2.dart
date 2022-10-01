@@ -25,12 +25,12 @@ class _CaptureImageV2State extends State<CaptureImageV2> {
   late CameraController _controller;
   late Future<void> _initializeControllerFuture;
   AnomalyImageData? lastImageAnomaly;
-  AnomalyVideoData? lastVideoAnomaly;
   bool isRecording = false;
   double traveledDistance = 0;
   DateTime captureStartedAt = DateTime.now();
   Map<String, LatLng> locationRecorded = {};
   LatLng? previousPosition;
+  bool isProcessingImage = false;
 
   @override
   void initState() {
@@ -45,7 +45,6 @@ class _CaptureImageV2State extends State<CaptureImageV2> {
         locationRecorded[(curLoc.time ?? DateTime.now().millisecondsSinceEpoch)
             .toInt()
             .toString()] = currentPosition;
-
         if (previousPosition != null) {
           setState(() {
             traveledDistance +=
@@ -96,7 +95,6 @@ class _CaptureImageV2State extends State<CaptureImageV2> {
         content: Text("Video successfully saved :)"),
       ));
       setState(() {
-        lastVideoAnomaly = data;
         traveledDistance = 0;
 
         /// clear the record, it should only contain while recording, once record stopped, all the
@@ -109,6 +107,29 @@ class _CaptureImageV2State extends State<CaptureImageV2> {
       setState(() {
         captureStartedAt = DateTime.now();
         isRecording = true;
+      });
+    }
+  }
+
+  void handleCapture() async {
+    setState(() {
+      isProcessingImage = true;
+    });
+    try {
+      final image = await _controller.takePicture();
+      var loc = await Location().getLocation();
+      await CommonUtils.addImageToQueue(image, loc);
+
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text("Image saved successfully :)"),
+      ));
+    } catch (error) {
+      if (kDebugMode) {
+        print(error);
+      }
+    } finally {
+      setState(() {
+        isProcessingImage = false;
       });
     }
   }
@@ -149,14 +170,16 @@ class _CaptureImageV2State extends State<CaptureImageV2> {
                               horizontal: 26, vertical: 5),
                           decoration: BoxDecoration(
                               color: Colors.black.withOpacity(0.25),
-                              borderRadius: const BorderRadius.all(
-                                  Radius.circular(12))),
+                              borderRadius:
+                                  const BorderRadius.all(Radius.circular(12))),
                           child: Text(
                             distancestr,
                             style: txtStl16w300,
                           ),
                         ),
-                        const SizedBox(width: 236,),
+                        const SizedBox(
+                          width: 236,
+                        ),
                         RecordedTime(isRecording: isRecording),
                       ],
                     ),
@@ -166,19 +189,50 @@ class _CaptureImageV2State extends State<CaptureImageV2> {
                         InkWell(
                           onTap: handleRecording,
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16,vertical: 30),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 30),
                             decoration: BoxDecoration(
-                              color: Colors.transparent,
-                              border: Border.all(color: Colors.white, width: 2),
-                              borderRadius: BorderRadius.circular(50)
-                            ),
+                                color: Colors.transparent,
+                                border:
+                                    Border.all(color: Colors.white, width: 2),
+                                borderRadius: BorderRadius.circular(50)),
                             child: Text(
                               !isRecording ? 'START' : 'STOP',
                               style: txtStl16w700,
                             ),
                           ),
                         ),
-                        const SizedBox(width: 42,)
+                        const SizedBox(
+                          width: 42,
+                        )
+                      ],
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        InkWell(
+                          onTap: isProcessingImage ? null : handleCapture,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 8),
+                            decoration: BoxDecoration(
+                                color: Colors.transparent,
+                                border: Border.all(
+                                    color: Colors.white.withOpacity(
+                                        isProcessingImage ? 0.5 : 1),
+                                    width: 1),
+                                borderRadius: BorderRadius.circular(8)),
+                            child: Text(
+                              'Capture',
+                              style: txtStl14w400.copyWith(
+                                  color: Colors.white.withOpacity(
+                                      isProcessingImage ? 0.5 : 1)),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(
+                          width: 42,
+                        )
                       ],
                     ),
                     Row(
@@ -192,10 +246,11 @@ class _CaptureImageV2State extends State<CaptureImageV2> {
                               "Exit",
                               style: txtStl16w700,
                             )),
-                        const SizedBox(width: 42,)
+                        const SizedBox(
+                          width: 42,
+                        )
                       ],
                     ),
-
                   ],
                 ),
               )
@@ -270,12 +325,13 @@ class _RecordedTimeState extends State<RecordedTime> {
           borderRadius: const BorderRadius.all(Radius.circular(12))),
       child: Row(
         children: [
-          if(widget.isRecording) Lottie.asset(
-            'assets/recording_animation.json',
-            width: 16,
-            height: 16,
-            fit: BoxFit.fill,
-          ),
+          if (widget.isRecording)
+            Lottie.asset(
+              'assets/recording_animation.json',
+              width: 16,
+              height: 16,
+              fit: BoxFit.fill,
+            ),
           const SizedBox(
             width: 8,
           ),

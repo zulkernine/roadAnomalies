@@ -11,7 +11,8 @@ class CommonUtils{
   static Future<AnomalyImageData> addImageToQueue(XFile image,LocationData locationData)async{
     LatLng location = LatLng(locationData.latitude!, locationData.longitude!);
     File img = await LocalStorageUtil.copyToDocumentDirectory(image);
-    AnomalyImageData anomaly = AnomalyImageData(img,DateTime.now(),location);
+    final locationName = await NetworkUtil.reverseGeoCode(location);
+    AnomalyImageData anomaly = AnomalyImageData(img,DateTime.now(),location,locationName);
     await LocalStorageUtil.addAnomaly(anomaly);
     return anomaly;
   }
