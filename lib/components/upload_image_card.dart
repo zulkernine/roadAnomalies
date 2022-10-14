@@ -120,7 +120,7 @@ class _UploadImageCardState extends State<UploadImageCard> {
                                   ))
                                 : const Padding(
                                     padding: EdgeInsets.all(12),
-                                    child: SizedBox(height: 14,width:14,child: CircularProgressIndicator(strokeWidth: 1,),),
+                                    child: SizedBox(height: 14,width:14,child: CircularProgressIndicator(strokeWidth: 2,color: Colors.black,),),
                                   ),
                             const SizedBox(
                               width: 12,

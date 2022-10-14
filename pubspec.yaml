@@ -12,7 +12,7 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.2
-  camera:
+  camera: ^0.10.0+3
   path_provider:
   path:
   google_maps_flutter: ^2.2.0
@@ -30,6 +30,8 @@ dependencies:
   firebase_core: ^1.22.0
   firebase_auth: ^3.9.0
   video_compress: ^3.1.0
+  sensors_plus: ^1.4.0
+  native_device_orientation: ^1.1.4
 
 dev_dependencies:
   flutter_test:

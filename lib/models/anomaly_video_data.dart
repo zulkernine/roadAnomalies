@@ -2,12 +2,13 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:roadanomalies_root/models/anomaly_data.dart';
+import 'package:roadanomalies_root/models/location_descriptio.dart';
 
 class AnomalyVideoData extends AnomalyData {
   late Map<String, LatLng> positions;
   final double distance;
-  final String startLocation;
-  final String destLocation;
+  final LocationDescription startLocation;
+  final LocationDescription destLocation;
 
   AnomalyVideoData(File video, DateTime capturedAt, this.positions,
       this.distance, this.startLocation, this.destLocation)
@@ -15,8 +16,8 @@ class AnomalyVideoData extends AnomalyData {
 
   AnomalyVideoData.fromJson(Map<String, dynamic> json)
       : distance = double.parse(json["distance"]),
-        startLocation = json["startLocation"]??"",
-        destLocation = json["destLocation"]??"",
+        startLocation = LocationDescription.fromJson(json["startLocation"]),
+        destLocation = LocationDescription.fromJson(json["destLocation"]),
         super.fromJson(json) {
     positions = {};
     for (MapEntry<String, dynamic> mpe
@@ -26,12 +27,12 @@ class AnomalyVideoData extends AnomalyData {
   }
 
   @override
-  Map<String, String> toJson() => {
+  Map<String, dynamic> toJson() => {
         ...super.toJson(),
         "positions": jsonEncode(positions),
         "distance": distance.toString(),
-        "startLocation": startLocation,
-        "destLocation": destLocation
+        "startLocation": startLocation.toJson(),
+        "destLocation": destLocation.toJson()
       };
 
   @override

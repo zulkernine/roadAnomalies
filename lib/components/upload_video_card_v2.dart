@@ -210,7 +210,7 @@ class _UploadVideoCardV2State extends State<UploadVideoCardV2> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      widget.anomalyData.startLocation,
+                      widget.anomalyData.startLocation.place,
                       maxLines: 1,
                       softWrap: true,
                       overflow: TextOverflow.ellipsis,
@@ -261,7 +261,7 @@ class _UploadVideoCardV2State extends State<UploadVideoCardV2> {
                       height: 4,
                     ),
                     Text(
-                      widget.anomalyData.destLocation,
+                      widget.anomalyData.destLocation.place,
                       maxLines: 1,
                       softWrap: true,
                       overflow: TextOverflow.ellipsis,

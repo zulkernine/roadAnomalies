@@ -34,12 +34,14 @@ class _RecordedVideoListState extends State<RecordedVideoList> {
           localImageAnomalies.add(data as AnomalyImageData);
         }
       }
+      localVideoAnomalies.sort((a,b)=>b.capturedAt.compareTo(a.capturedAt));
+      localImageAnomalies.sort((a,b)=>b.capturedAt.compareTo(a.capturedAt));
     });
   }
 
   String onEmptyMessage(){
     if(localImageAnomalies.isEmpty && localVideoAnomalies.isEmpty) {
-      return "You've no recorded or captured any media saved.";
+      return "You've no recorded or captured media saved.";
     } else if(localVideoAnomalies.isEmpty) {
       return "You've no saved video.";
     } else if(localImageAnomalies.isEmpty) {

@@ -1,5 +1,6 @@
 import 'dart:async';
-
+import 'package:sensors_plus/sensors_plus.dart';
+import 'package:native_device_orientation/native_device_orientation.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -22,8 +23,10 @@ class CaptureImageV2 extends StatefulWidget {
 }
 
 class _CaptureImageV2State extends State<CaptureImageV2> {
+  late NativeDeviceOrientationCommunicator nativeDeviceOrientationCommunicator;
   late CameraController _controller;
   late Future<void> _initializeControllerFuture;
+
   AnomalyImageData? lastImageAnomaly;
   bool isRecording = false;
   double traveledDistance = 0;
@@ -38,10 +41,21 @@ class _CaptureImageV2State extends State<CaptureImageV2> {
     _controller = CameraController(widget.camera, ResolutionPreset.max);
     _initializeControllerFuture = _controller.initialize();
 
+    _onInitListenToSensors();
+
+    //change orientation
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.landscapeRight,
+      DeviceOrientation.landscapeLeft,
+    ]);
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersive);
+  }
+
+  void _onInitListenToSensors() {
     // capture continuous location change, when user is recording
     Location().onLocationChanged.listen((LocationData curLoc) {
       final currentPosition = LatLng(curLoc.latitude!, curLoc.longitude!);
-      if (isRecording) {
+      if (isRecording && !_controller.value.isRecordingPaused) {
         locationRecorded[(curLoc.time ?? DateTime.now().millisecondsSinceEpoch)
             .toInt()
             .toString()] = currentPosition;
@@ -60,12 +74,34 @@ class _CaptureImageV2State extends State<CaptureImageV2> {
       }
     });
 
-    //change orientation
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.landscapeRight,
-      DeviceOrientation.landscapeLeft,
-    ]);
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersive);
+    nativeDeviceOrientationCommunicator = NativeDeviceOrientationCommunicator();
+    // nativeDeviceOrientationCommunicator
+    //     .onOrientationChanged(useSensor: true)
+    //     .listen((orientation) {
+    //   if ((orientation == NativeDeviceOrientation.portraitDown ||
+    //       orientation == NativeDeviceOrientation.portraitUp) && isRecording) {
+    //     // handleRecording();
+    //     //   WidgetsBinding.instance.addPostFrameCallback((_) {
+    //     //     handleRecording();
+    //     //   });
+    //   }
+    // });
+
+    // accelerometerEvents.listen((AccelerometerEvent event) {
+    //   print(event);
+    // });
+    //
+    // userAccelerometerEvents.listen((UserAccelerometerEvent event) {
+    //   print(event);
+    // });
+    //
+    // gyroscopeEvents.listen((GyroscopeEvent event) {
+    //   print(event);
+    // });
+    //
+    // magnetometerEvents.listen((MagnetometerEvent event) {
+    //   print(event);
+    // });
   }
 
   @override
@@ -82,21 +118,55 @@ class _CaptureImageV2State extends State<CaptureImageV2> {
     super.dispose();
   }
 
+  void handlePause() async {
+    try{
+      if (_controller.value.isRecordingVideo) {
+        if (_controller.value.isRecordingPaused) {
+          await _controller.resumeVideoRecording();
+          setState(() {});
+        } else {
+          await _controller.pauseVideoRecording();
+          setState(() {});
+        }
+      }
+    }catch(e){
+      print(e);
+    }
+
+  }
+
   void handleRecording() async {
     if (isRecording) {
-      final file = await _controller.stopVideoRecording();
-      setState(() => isRecording = false);
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text("Saving the video..."),
+      ));
 
-      //TODO save video
+      final file = await _controller.stopVideoRecording();
+      final distance = traveledDistance;
+      setState(() {
+        isRecording = false;
+        traveledDistance = 0;
+      });
+
+      //add current location to the list
+      final curLoc = await Location.instance.getLocation();
+      final currentPosition = LatLng(curLoc.latitude!, curLoc.longitude!);
+
+      locationRecorded[(DateTime.now())
+          .millisecondsSinceEpoch
+          .toInt()
+          .toString()] = currentPosition;
+
+      //save video
       AnomalyVideoData data = await CommonUtils.addVideoToQueue(
-          file, captureStartedAt, {...locationRecorded}, traveledDistance);
+          file, captureStartedAt, {...locationRecorded}, distance);
       print(data.toJson());
+      ScaffoldMessenger.of(context).clearSnackBars();
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
         content: Text("Video successfully saved :)"),
       ));
       setState(() {
-        traveledDistance = 0;
-
         /// clear the record, it should only contain while recording, once record stopped, all the
         /// data will be moved to create AnomalyVideoData
         locationRecorded.clear();
@@ -105,9 +175,16 @@ class _CaptureImageV2State extends State<CaptureImageV2> {
       await _controller.prepareForVideoRecording();
       await _controller.startVideoRecording();
       setState(() {
-        captureStartedAt = DateTime.now();
         isRecording = true;
       });
+
+      // Add current location to the list
+      final curLoc = await Location.instance.getLocation();
+      captureStartedAt = DateTime.now();
+      final currentPosition = LatLng(curLoc.latitude!, curLoc.longitude!);
+      locationRecorded[captureStartedAt.millisecondsSinceEpoch
+          .toInt()
+          .toString()] = currentPosition;
     }
   }
 
@@ -120,6 +197,7 @@ class _CaptureImageV2State extends State<CaptureImageV2> {
       var loc = await Location().getLocation();
       await CommonUtils.addImageToQueue(image, loc);
 
+      ScaffoldMessenger.of(context).clearSnackBars();
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
         content: Text("Image saved successfully :)"),
       ));
@@ -150,6 +228,7 @@ class _CaptureImageV2State extends State<CaptureImageV2> {
           if (snapshot.connectionState == ConnectionState.done) {
             final size = MediaQuery.of(context).size;
             final deviceRatio = size.width / size.height;
+
             return Stack(alignment: AlignmentDirectional.centerEnd, children: [
               AspectRatio(
                 aspectRatio: deviceRatio,
@@ -180,9 +259,38 @@ class _CaptureImageV2State extends State<CaptureImageV2> {
                         const SizedBox(
                           width: 236,
                         ),
-                        RecordedTime(isRecording: isRecording),
+                        RecordedTime(
+                          isRecording: isRecording,
+                          pause: _controller.value.isRecordingPaused,
+                        ),
                       ],
                     ),
+                    if (isRecording)
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          InkWell(
+                            onTap: handlePause,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 8),
+                              decoration: BoxDecoration(
+                                  color: Colors.transparent,
+                                  border: Border.all(
+                                      color: Colors.white,
+                                      width: 1),
+                                  borderRadius: BorderRadius.circular(8)),
+                              child: Text(
+                                _controller.value.isRecordingPaused ? 'Resume' : 'Pause',
+                                style: txtStl14w400,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(
+                            width: 42,
+                          )
+                        ],
+                      ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
@@ -267,29 +375,43 @@ class _CaptureImageV2State extends State<CaptureImageV2> {
 
 class RecordedTime extends StatefulWidget {
   final bool isRecording;
+  final bool pause;
 
-  const RecordedTime({Key? key, required this.isRecording}) : super(key: key);
+  const RecordedTime({Key? key, required this.isRecording, required this.pause})
+      : super(key: key);
 
   @override
   State<RecordedTime> createState() => _RecordedTimeState();
 }
 
 class _RecordedTimeState extends State<RecordedTime> {
-  DateTime startTime = DateTime.now();
+  late Stopwatch stopwatch;
   String _timeString = "00:00:00";
   Timer? t;
+
+  @override
+  void initState() {
+    stopwatch = Stopwatch();
+    super.initState();
+  }
 
   @override
   void didUpdateWidget(covariant RecordedTime oldWidget) {
     if (oldWidget.isRecording != widget.isRecording) {
       if (widget.isRecording) {
-        startTime = DateTime.now();
+        stopwatch.start();
         t = Timer.periodic(
             const Duration(seconds: 1), (Timer t) => _getTime(t));
       } else {
         t?.cancel();
+        stopwatch.stop();
+        stopwatch.reset();
         _timeString = "00:00:00";
       }
+    } else if (oldWidget.pause && !widget.pause) {
+      stopwatch.start();
+    } else if (widget.pause && !oldWidget.pause) {
+      stopwatch.stop();
     }
     super.didUpdateWidget(oldWidget);
   }
@@ -301,7 +423,10 @@ class _RecordedTimeState extends State<RecordedTime> {
   }
 
   void _getTime(Timer t) {
-    final Duration d = DateTime.now().difference(startTime);
+    if (widget.pause) return;
+
+    final Duration d = stopwatch.elapsed;
+
     final String formattedDateTime = _printDuration(d);
     setState(() {
       this.t = t;

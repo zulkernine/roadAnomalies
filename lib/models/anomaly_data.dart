@@ -14,7 +14,7 @@ abstract class AnomalyData{
         capturedAt =
         DateTime.fromMillisecondsSinceEpoch(int.parse(json["capturedAt"]! as String));
 
-  Map<String, String> toJson() => {
+  Map<String, dynamic> toJson() => {
     "mediaPath": mediaFile.path,
     "capturedAt": capturedAt.millisecondsSinceEpoch.toString(),
     "type": getType().name,

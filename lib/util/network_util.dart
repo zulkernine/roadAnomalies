@@ -41,15 +41,21 @@ class NetworkUtil {
   static Future<bool> uploadSingle(AnomalyImageData anomaly) async {
     try {
       Map<String, dynamic> data = {};
+      Map<String, dynamic> formData = {};
       data["latitude"] = anomaly.position.latitude.toString();
       data["longitude"] = anomaly.position.longitude.toString();
       data["capturedAt"] = anomaly.capturedAt.millisecondsSinceEpoch.toString();
-      data["photo"] = MultipartFile(
+      data["userId"] = AuthUtil.getCurrentUser()?.uid;
+      data["deviceId"] = await PlatformDeviceId.getDeviceId;
+
+      formData["photo"] = MultipartFile(
           anomaly.mediaFile.openRead(), await anomaly.mediaFile.length(),
           filename: basename(anomaly.mediaFile.path));
+      formData["metadata"] = jsonEncode(data);
+      print(formData.toString());
 
-      Response response = await client.dio.post("/single",
-          data: FormData.fromMap(data),
+      Response response = await client.dio.post("/photo/single",
+          data: FormData.fromMap(formData),
           options: Options(contentType: 'multipart/form-data'));
       if (kDebugMode) {
         print(response.data);
@@ -166,6 +172,8 @@ class NetworkUtil {
       metadata["capturedAt"] = anomaly.capturedAt.millisecondsSinceEpoch;
       metadata["deviceId"] = await PlatformDeviceId.getDeviceId;
       metadata["userId"] = AuthUtil.getCurrentUser()?.uid;
+      metadata["startedAt"] = anomaly.startLocation.toJson();
+      metadata["endedAt"] = anomaly.destLocation.toJson();
       for (var p in anomaly.positions.entries) {
         metadata["positions"][p.key] = {
           "latitude": p.value.latitude,
@@ -175,6 +183,7 @@ class NetworkUtil {
       var controller = VideoPlayerController.file(anomaly.mediaFile);
       await controller.initialize();
       metadata["duration"] = controller.value.duration.inMilliseconds;
+      print(metadata.toString());
 
       var request = HttpClient.getPOSTRequest("/video/single")
         ..fields['metadata'] = jsonEncode(metadata)
