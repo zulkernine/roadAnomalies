@@ -4,7 +4,7 @@ import 'package:roadanomalies_root/colors.dart';
 import 'package:roadanomalies_root/pages/anomalies_map.dart';
 import 'package:roadanomalies_root/constants.dart';
 import 'package:roadanomalies_root/pages/capture_image_v2.dart';
-import 'package:roadanomalies_root/pages/draft_v2.dart';
+import 'package:roadanomalies_root/pages/recorded_media.dart';
 import 'package:location/location.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:roadanomalies_root/pages/home_v2.dart';

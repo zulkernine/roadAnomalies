@@ -73,7 +73,7 @@ class _UploadImageCardState extends State<UploadImageCard> {
           Expanded(
               flex: 1,
               child:
-                  FullScreenViewImage(image: widget.anomalyData.mediaFile,height: 100,)),
+                  FullScreenViewImage(image: FileImage(widget.anomalyData.mediaFile),height: 100,)),
           const SizedBox(
             width: 8,
           ),

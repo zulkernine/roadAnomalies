@@ -6,6 +6,7 @@ import 'package:roadanomalies_root/colors.dart';
 import 'package:roadanomalies_root/components/my_appbar_v2.dart';
 import 'package:roadanomalies_root/components/my_drawer.dart';
 import 'package:roadanomalies_root/components/recorded_video_list.dart';
+import 'package:roadanomalies_root/components/uploaded_media_list.dart';
 import 'package:roadanomalies_root/styles.dart';
 
 class DraftsV2 extends StatefulWidget {
@@ -139,7 +140,7 @@ class _DraftsV2State extends State<DraftsV2> {
               ];
             },
             body: const TabBarView(
-              children: [RecordedVideoList(), Text("Status Pages")],
+              children: [RecordedVideoList(), UploadedMediaList()],
             ),
           ),
         ),

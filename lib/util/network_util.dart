@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
 import 'package:dio/dio.dart';
 import 'package:http_parser/http_parser.dart';
@@ -8,19 +9,21 @@ import 'package:path/path.dart';
 import 'package:platform_device_id/platform_device_id.dart';
 import 'package:roadanomalies_root/models/anomaly_image_data.dart';
 import 'package:roadanomalies_root/models/anomaly_video_data.dart';
+import 'package:roadanomalies_root/models/server_models/base_model.dart';
+import 'package:roadanomalies_root/models/server_models/image_dao.dart';
+import 'package:roadanomalies_root/models/server_models/video_dao.dart';
 import 'package:roadanomalies_root/util/auth_util.dart';
 import 'package:roadanomalies_root/util/storage_util.dart';
 import 'package:video_player/video_player.dart';
 
 class HttpClient {
-
   static const baseUrl = "http://107.23.192.116";
 
   static http.MultipartRequest getGETRequest(String path) =>
-      http.MultipartRequest("GET", Uri.parse(baseUrl+path));
+      http.MultipartRequest("GET", Uri.parse(baseUrl + path));
 
   static http.MultipartRequest getPOSTRequest(String path) =>
-      http.MultipartRequest("POST", Uri.parse(baseUrl+path));
+      http.MultipartRequest("POST", Uri.parse(baseUrl + path));
 
   final Dio dio;
 
@@ -47,6 +50,7 @@ class NetworkUtil {
       data["capturedAt"] = anomaly.capturedAt.millisecondsSinceEpoch.toString();
       data["userId"] = AuthUtil.getCurrentUser()?.uid;
       data["deviceId"] = await PlatformDeviceId.getDeviceId;
+      data["place"] = anomaly.locationName;
 
       formData["photo"] = MultipartFile(
           anomaly.mediaFile.openRead(), await anomaly.mediaFile.length(),
@@ -196,7 +200,7 @@ class NetworkUtil {
       print(response.statusCode);
       print(response.body);
       print(response.headers);
-      if(response.statusCode >= 200 && response.statusCode <300) {
+      if (response.statusCode >= 200 && response.statusCode < 300) {
         return true;
       } else {
         return false;
@@ -220,5 +224,22 @@ class NetworkUtil {
       print(e);
       return "";
     }
+  }
+
+  static Future<List<MediaDao>> getUploadedMedia() async {
+    String userId = FirebaseAuth.instance.currentUser?.uid ?? '';
+    if (userId.isEmpty) return [];
+
+    try{
+      Response response = await client.dio.get('/uploaded?userId=$userId');
+      return (response.data as List)
+          .map((e) => (e['assetType'] == 'video')
+          ? VideoDao.fromJson(e as Map<String, dynamic>)
+          : ImageDao.fromJson(e as Map<String, dynamic>))
+          .toList();
+    }catch(e){
+      print("Exception occured $e");
+    }
+    return [];
   }
 }
