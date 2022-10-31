@@ -7,15 +7,17 @@ import 'package:roadanomalies_root/models/location_descriptio.dart';
 class AnomalyVideoData extends AnomalyData {
   late Map<String, LatLng> positions;
   final double distance;
+  final int duration; // inMilliSeconds
   final LocationDescription startLocation;
   final LocationDescription destLocation;
 
   AnomalyVideoData(File video, DateTime capturedAt, this.positions,
-      this.distance, this.startLocation, this.destLocation)
+      this.distance, this.startLocation, this.destLocation, this.duration)
       : super(video, capturedAt);
 
   AnomalyVideoData.fromJson(Map<String, dynamic> json)
       : distance = double.parse(json["distance"]),
+       duration = json["duration"],
         startLocation = LocationDescription.fromJson(json["startLocation"]),
         destLocation = LocationDescription.fromJson(json["destLocation"]),
         super.fromJson(json) {
@@ -32,7 +34,8 @@ class AnomalyVideoData extends AnomalyData {
         "positions": jsonEncode(positions),
         "distance": distance.toString(),
         "startLocation": startLocation.toJson(),
-        "destLocation": destLocation.toJson()
+        "destLocation": destLocation.toJson(),
+        'duration': duration,
       };
 
   @override

@@ -126,6 +126,7 @@ class NetworkUtil {
     return false;
   }
 
+  @Deprecated("Use NetworkUtil@uploadVideoHttp")
   static Future<bool> uploadVideoSingle(AnomalyVideoData anomaly,
       {Function(int, int)? onSendProgressCallback}) async {
     try {
@@ -184,9 +185,9 @@ class NetworkUtil {
           "longitude": p.value.longitude
         };
       }
-      var controller = VideoPlayerController.file(anomaly.mediaFile);
-      await controller.initialize();
-      metadata["duration"] = controller.value.duration.inMilliseconds;
+
+      metadata["duration"] = anomaly.duration;
+      metadata["travelledDistance"] = anomaly.distance;
       print(metadata.toString());
 
       var request = HttpClient.getPOSTRequest("/video/single")

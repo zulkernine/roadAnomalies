@@ -23,23 +23,6 @@ class UploadVideoCardV2 extends StatefulWidget {
 }
 
 class _UploadVideoCardV2State extends State<UploadVideoCardV2> {
-  late VideoPlayerController controller;
-
-  @override
-  void initState() {
-    controller = VideoPlayerController.file(widget.anomalyData.mediaFile)
-      ..initialize().then((value) {
-        setState(() {});
-      });
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    controller.dispose();
-    super.dispose();
-  }
-
   bool isUploading = false;
   bool isCompressing = false;
   double progress = 0;
@@ -76,11 +59,11 @@ class _UploadVideoCardV2State extends State<UploadVideoCardV2> {
 
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text(success
-            ? "Successfully uploaded!, this image will be deleted from local storage. "
+            ? "Successfully uploaded!, this video will be deleted from local storage. "
             : "Failed to upload :("),
       ));
 
-      if (success){
+      if (success) {
         widget.deleteCurrentElement();
         VideoCompress.deleteAllCache();
       }
@@ -99,7 +82,7 @@ class _UploadVideoCardV2State extends State<UploadVideoCardV2> {
   void openVideoPage() {
     Navigator.push(context, MaterialPageRoute(builder: (BuildContext context) {
       return VideoPlayerPage(
-        controller: controller,
+        controller: VideoPlayerController.file(widget.anomalyData.mediaFile),
       );
     }));
   }
@@ -121,24 +104,18 @@ class _UploadVideoCardV2State extends State<UploadVideoCardV2> {
   }
 
   String _getVideoDuration() {
-    if (controller.value.isInitialized) {
-      Duration duration = controller.value.duration;
-      if (duration.inHours > 0) {
-        return "${duration.inHours}H ${duration.inMinutes.remainder(60)}m ${(duration.inSeconds.remainder(60))}s";
-      } else if (duration.inMinutes > 0) {
-        return "${duration.inMinutes}m ${(duration.inSeconds)}s";
-      }
-
-      return "${(duration.inSeconds)}s";
+    Duration duration = Duration(milliseconds: widget.anomalyData.duration);
+    if (duration.inHours > 0) {
+      return "${duration.inHours}H ${duration.inMinutes.remainder(60)}m ${(duration.inSeconds.remainder(60))}s";
+    } else if (duration.inMinutes > 0) {
+      return "${duration.inMinutes}m ${(duration.inSeconds)}s";
     }
-    return "";
+
+    return "${(duration.inSeconds)}s";
   }
 
   String _getFileSize() {
-    if (controller.value.isInitialized) {
-      return "${widget.anomalyData.mediaFile.lengthSync() ~/ 1000000} MB";
-    }
-    return "";
+    return "${widget.anomalyData.mediaFile.lengthSync() ~/ 1000000} MB";
   }
 
   @override
@@ -326,7 +303,10 @@ class _UploadVideoCardV2State extends State<UploadVideoCardV2> {
             const SizedBox(
               height: 8,
             ),
-            Text("Uploading",style: txtStl12w300Black,)
+            Text(
+              "Uploading",
+              style: txtStl12w300Black,
+            )
           ],
         ),
       );
@@ -339,7 +319,10 @@ class _UploadVideoCardV2State extends State<UploadVideoCardV2> {
             const SizedBox(
               height: 8,
             ),
-            Text("Compressing",style: txtStl12w300Black,)
+            Text(
+              "Compressing",
+              style: txtStl12w300Black,
+            )
           ],
         ),
       );

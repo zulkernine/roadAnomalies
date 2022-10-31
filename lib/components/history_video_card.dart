@@ -13,7 +13,7 @@ class HistoryVideoCard extends StatelessWidget {
   void openVideoPage(context){
     Navigator.push(context, MaterialPageRoute(builder: (BuildContext context) {
       return VideoPlayerPage(
-        videoUrl: video.assetURL,
+        controller: VideoPlayerController.network(video.assetURL),
       );
     }));
   }
@@ -125,8 +125,8 @@ class HistoryVideoCard extends StatelessWidget {
                         const SizedBox(width: 8,),
                         Chip(
                           label: Text(
-                            video.isProcessed ? "Processed" : "Not Processed",
-                            style: txtStl16w300,
+                            video.isProcessed ? "Processed" : "Uploaded",
+                            style: txtStl12w300,
                           ),
                           backgroundColor: video.isProcessed ? blue1 : grey1,
                         ),

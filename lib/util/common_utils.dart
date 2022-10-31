@@ -7,6 +7,7 @@ import 'package:roadanomalies_root/models/anomaly_video_data.dart';
 import 'package:roadanomalies_root/models/location_descriptio.dart';
 import 'package:roadanomalies_root/util/network_util.dart';
 import 'package:roadanomalies_root/util/storage_util.dart';
+import 'package:video_player/video_player.dart';
 
 class CommonUtils {
   static Future<AnomalyImageData> addImageToQueue(XFile image,
@@ -23,7 +24,17 @@ class CommonUtils {
   static Future<AnomalyVideoData> addVideoToQueue(XFile video,
       DateTime captureStartAt, Map<String, LatLng> locations,
       double traveledDistance) async {
+
+    // copy video to permanent directory
     File vid = await LocalStorageUtil.copyToDocumentDirectory(video);
+
+    //get duration
+    var controller = VideoPlayerController.file(vid);
+    await controller.initialize();
+    int duration = controller.value.duration.inMilliseconds;
+    controller.dispose();
+
+    //Get locations and there descriptions
     final startPlace = await NetworkUtil.reverseGeoCode(locations.values.first);
     final start = LocationDescription(
         locations.values.first.latitude, locations.values.first.longitude,
@@ -32,8 +43,12 @@ class CommonUtils {
     final end = LocationDescription(
         locations.values.last.latitude, locations.values.last.longitude,
         endPlace);
+
+    // create anomaly object
     AnomalyVideoData anomaly = AnomalyVideoData(
-        vid, captureStartAt, locations, traveledDistance, start, end);
+        vid, captureStartAt, locations, traveledDistance, start, end,duration);
+
+    // save to local storage
     await LocalStorageUtil.addAnomaly(anomaly);
     return anomaly;
   }

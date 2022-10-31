@@ -6,12 +6,9 @@ import 'package:video_player/video_player.dart';
 
 /// Stateful widget to fetch and then display video content.
 class VideoPlayerPage extends StatefulWidget {
-  final VideoPlayerController? controller;
-  final String? videoUrl;
+  final VideoPlayerController controller;
 
-  const VideoPlayerPage({Key? key, this.controller, this.videoUrl})
-      : assert(controller != null || videoUrl != null),
-        super(key: key);
+  const VideoPlayerPage({Key? key, required this.controller}) : super(key: key);
 
   @override
   VideoPlayerPageState createState() => VideoPlayerPageState();
@@ -19,7 +16,6 @@ class VideoPlayerPage extends StatefulWidget {
 
 class VideoPlayerPageState extends State<VideoPlayerPage> {
   ChewieController? chewieController;
-  late VideoPlayerController controller;
 
   @override
   void initState() {
@@ -27,27 +23,17 @@ class VideoPlayerPageState extends State<VideoPlayerPage> {
     initAsync();
   }
 
-  Future initAsync() async {
-    if (widget.controller == null) {
-      controller =
-          VideoPlayerController.network(widget.videoUrl!);
-      await controller.initialize();
 
-      setState(() {
-        chewieController = ChewieController(
-          videoPlayerController: controller,
-          autoPlay: true,
-          looping: true,
-        );
-      });
-    } else {
-      controller = widget.controller!;
+
+  Future initAsync() async {
+    await widget.controller.initialize();
+    setState(() {
       chewieController = ChewieController(
         videoPlayerController: widget.controller!,
         autoPlay: true,
         looping: true,
       );
-    }
+    });
   }
 
   @override
@@ -65,7 +51,7 @@ class VideoPlayerPageState extends State<VideoPlayerPage> {
               )
             : Center(
                 child: AspectRatio(
-                aspectRatio: controller.value.aspectRatio,
+                aspectRatio: widget.controller.value.aspectRatio,
                 child: Chewie(
                   controller: chewieController!,
                 ),
@@ -77,7 +63,7 @@ class VideoPlayerPageState extends State<VideoPlayerPage> {
   @override
   void dispose() {
     super.dispose();
-    controller.dispose();
+    widget.controller.dispose();
     chewieController?.dispose();
   }
 }

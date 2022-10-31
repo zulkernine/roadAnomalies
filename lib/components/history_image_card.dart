@@ -53,7 +53,7 @@ class HistoryImageCard extends StatelessWidget {
                   ),
                   Chip(
                     label: Text(
-                      image.isProcessed ? "Processed" : "Not Processed",
+                      image.isProcessed ? "Processed" : "Uploaded",
                       style: txtStl16w300,
                     ),
                     backgroundColor: image.isProcessed ? blue1 : grey1,
