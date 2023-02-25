@@ -70,6 +70,16 @@ class MyDrawer extends StatelessWidget {
               Navigator.pushNamed(context, RouteName.map);
             },
           ),
+          ListTile(
+            title: const Text(
+              "Survey Form",
+              style: TextStyle(color: Colors.white),
+            ),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.pushNamed(context, RouteName.survey);
+            },
+          ),
           const SizedBox(
             height: 50,
           ),

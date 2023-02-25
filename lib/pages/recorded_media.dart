@@ -90,7 +90,9 @@ class _DraftsV2State extends State<DraftsV2> {
                               "Rem. Storage",
                               style: txtStl16w300,
                             ),
-                            const SizedBox(height: 8,),
+                            const SizedBox(
+                              height: 8,
+                            ),
                             FutureBuilder(
                                 future: DiskSpace.getFreeDiskSpace,
                                 builder: (ctx, snapshot) {
@@ -109,7 +111,9 @@ class _DraftsV2State extends State<DraftsV2> {
                         )
                       ],
                     ),
-                    const SizedBox(height: 20,),
+                    const SizedBox(
+                      height: 20,
+                    ),
                   ],
                 )),
                 SliverToBoxAdapter(

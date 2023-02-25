@@ -11,6 +11,7 @@ import 'package:roadanomalies_root/pages/home_v2.dart';
 import 'package:roadanomalies_root/pages/signin.dart';
 // import 'firebase_options.dart';
 import 'package:roadanomalies_root/pages/signup.dart';
+import 'package:roadanomalies_root/pages/survey-form.dart';
 import 'package:roadanomalies_root/util/auth_util.dart';
 import 'package:roadanomalies_root/util/storage_util.dart';
 
@@ -137,6 +138,7 @@ class _MyAppState extends State<MyApp> {
             ),
         RouteName.map: (context) => const AnomaliesMap(),
         RouteName.draft: (context) => const DraftsV2(),
+        RouteName.survey: (context) => const SurveyForm(),
         RouteName.signup: (context) => const SignUpPage(),
         RouteName.signin: (context) => const SignInPage(),
         RouteName.home: (context) => const HomePageV2(),
